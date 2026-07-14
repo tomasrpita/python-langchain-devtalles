@@ -6,7 +6,7 @@ from src.langchain_section.config.settings import settings
 
 
 @lru_cache(maxsize=1)
-def get_llm(temperature: float = 1) -> ChatOpenAI:
+def get_llm(temperature: float | None = None) -> ChatOpenAI:
     """Retorna cliente LLM"""
     return ChatOpenAI(
         model=settings.CHAT_MODEL,
