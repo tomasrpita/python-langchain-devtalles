@@ -67,9 +67,43 @@ def demo_steps_inspection() -> None:
     print()
 
 
+def demo_batch() -> None:
+    """Bstch procesa varios inputs en PARALELO"""
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Eres un asistente técnico evaluador,"
+                " ante un comentario de usuario solo debes responder con una palabra"
+                " POSITIVO, NEGATIVO o NEUTRO.",
+            ),
+            ("human", "{texto}"),
+        ]
+    )
+
+    chain = prompt | llm | StrOutputParser()
+
+    inputs = [
+        {"texto": "Me encanta este framework, es increíble."},
+        {"texto": "El servidor estuvo caído 3 horas!! es inaceptable"},
+        {"texto": "La versión 2.0 ya está disponible"},
+        {"texto": "Perdí todos mis datos por un bug crítico."},
+        {"texto": "La documentación es bastante clara."},
+        {"texto": "Es una función."},
+    ]
+
+    results = chain.batch(inputs)
+
+    print("BATCH PROCESSING:")
+    for input_message, result in zip(inputs, results):
+        print(f" [{result}] {input_message['texto']}")
+    print()
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("LangChain LCEL - Fundamentos")
     print("=" * 60)
     # demo_simple_chain()
-    demo_steps_inspection()
+    # demo_steps_inspection()
+    demo_batch()
