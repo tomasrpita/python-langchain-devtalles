@@ -1,11 +1,12 @@
 """DEMO LCEL"""
 
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from src.langchain_section.core.llm import get_llm
 
-llm = get_llm()
+llm = get_llm(0.1)
 
 
 # código aquí
@@ -121,6 +122,59 @@ def demo_stream() -> None:
     print()
 
 
+def demo_passthrough() -> None:
+
+    # Simula retriever
+    def search_context(question: str) -> str:
+        contexts = {
+            "python": "Python fue creado por Guido Van Rossum en 1991.",
+            "langchain": "LangChain es un framework para aplicaciones con LLMs.",
+            "devtalles": "Una plataforma muy cool con instructores guapos.",
+        }
+
+        for (
+            keywork,
+            ctx,
+        ) in contexts.items():
+            if keywork.lower() in question.lower():
+                return ctx
+
+        return "No se encontro contexto relevante"
+
+    # Coge una función y la convierte en un Runnable con LCEL
+    retriever = RunnableLambda(search_context)
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Response usando este contexto: '\n{context}'",
+            ),
+            ("human", "{question}"),
+        ]
+    )
+
+    # RunnablePassthrough permite usar un runnable sin perder el prompt original
+    # En elsiguiente caso podemos seguir manteniendo la pregunta
+    # para luego poderla entregar con el contexto, ejemplo para un rag.
+    """
+    Asegurar que las variables clave de entrada (como la pregunta que hizo originalmente
+    el usuario) puedan cruzar intactas ciertas etapas de la cadena sin ser sobrescritas 
+    por otras operaciones.
+    """
+    chain = (
+        {"context": retriever, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    response = chain.invoke("¿Qué es TupiTupi?")
+    print("PASSTHROUGH DEMO: ")
+    print(response)
+    print()
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("LangChain LCEL - Fundamentos")
@@ -128,4 +182,5 @@ if __name__ == "__main__":
     # demo_simple_chain()
     # demo_steps_inspection()
     # demo_batch()
-    demo_stream()
+    # demo_stream()
+    demo_passthrough()
