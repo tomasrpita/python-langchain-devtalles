@@ -1746,6 +1746,7 @@ dependencies = [
     { name = "langchain-community" },
     { name = "langchain-openai" },
     { name = "onnxruntime" },
+    { name = "sqlalchemy" },
 ]
 
 [package.dev-dependencies]
@@ -1760,6 +1761,7 @@ requires-dist = [
     { name = "langchain-community", specifier = ">=0.3,<0.4" },
     { name = "langchain-openai", specifier = ">=0.3,<0.4" },
     { name = "onnxruntime", specifier = "==1.23.2" },
+    { name = "sqlalchemy", specifier = ">=2.0.51" },
 ]
 
 [package.metadata.requires-dev]

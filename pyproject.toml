@@ -10,6 +10,7 @@ dependencies = [
     "langchain-community>=0.3,<0.4",
     "langchain-openai>=0.3,<0.4",
     "onnxruntime==1.23.2",
+    "sqlalchemy>=2.0.51",
 ]
 
 [tool.uv]
