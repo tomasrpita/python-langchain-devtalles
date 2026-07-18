@@ -34,7 +34,7 @@ class SQLiteMemoryBackend(BaseMemoryBackend):
         try:
             with engine.connect() as conn:
                 result = conn.execute(
-                    text("SELECT DISTINT session_id FROM message_store")
+                    text("SELECT DISTINCT session_id FROM message_store")
                 )
 
             return [row[0] for row in result]
