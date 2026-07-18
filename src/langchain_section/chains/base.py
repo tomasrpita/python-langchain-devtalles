@@ -5,8 +5,8 @@ from langchain_core.runnables import Runnable
 from src.langchain_section.core.llm import get_llm
 
 
-def build_assitant_chain(system_prompt: str | None) -> Runnable:
-    """Construye una cadena base deñ asistente con soporte en el historial"""
+def build_assitant_chain(system_prompt: str | None = None) -> Runnable:
+    """Construye una cadena base del asistente con soporte en el historial"""
 
     default_system = """Eres un asistente técnico experto en Python e IA
 Tienes acceso al historial completo de esta conversación.

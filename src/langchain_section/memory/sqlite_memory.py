@@ -9,7 +9,7 @@ from src.langchain_section.memory.base import BaseMemoryBackend
 
 
 class SQLiteMemoryBackend(BaseMemoryBackend):
-    """BAckend dde momoria persistente usando SQLite"""
+    """Backend de momoria persistente usando SQLite"""
 
     def __init__(self, db_path: str | None = None):
         self.db_path = db_path or settings.SQLITE_DB_PATH
