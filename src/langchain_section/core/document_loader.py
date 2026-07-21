@@ -15,7 +15,7 @@ def load_file(file_path: Path) -> list[Document]:
     if not file_path.exists():
         raise FileNotFoundError(f"Archivo no encontrado {file_path}")
 
-    extension = file_path.suffix.lower
+    extension = file_path.suffix.lower()
 
     if extension not in SUPPORTED_EXTENSIONS:
         raise ValueError(
@@ -27,6 +27,7 @@ def load_file(file_path: Path) -> list[Document]:
 
     if extension == ".pdf":
         loader = PyPDFLoader(str(file_path))
+        # Sera un doc por cada pagina del PDF
         docs = loader.load()
         for doc in docs:
             doc.metadata["file_name"] = file_path.name
@@ -34,13 +35,17 @@ def load_file(file_path: Path) -> list[Document]:
 
     elif extension == ".txt":
         loader = TextLoader(str(file_path), encoding="utf-8")
+        # En este caso sera un solo doc, pero se puede dividir en chunks luego
         docs = loader.load()
+        # pero devuelve una lista de docs para mantener la consistencia, en este
+        # caso pudimos haber agregado metadata con
+        # docs[0].metadata["file_name"] = file_path.name
         for doc in docs:
             doc.metadata["source"] = str(file_path)
             doc.metadata["file_name"] = file_path.name
             doc.metadata["file_type"] = "txt"
 
-    print(f"{len(docs)} sección/es")
+    print(f" {len(docs)} sección/es")
 
     return docs
 
@@ -66,7 +71,7 @@ def load_directory(directory_path: Path) -> list[Document]:
         print("Agrega archivos .txt o .pdf y vuelve a ejecutar")
         return []
 
-    print(f"Archivos encontrados en {directory_path} : ")
+    print(f"Archivos encontrados en {directory_path}: ")
     all_docs = []
     errors = []
 
@@ -80,7 +85,7 @@ def load_directory(directory_path: Path) -> list[Document]:
 
     if errors:
         print(
-            f"\n ❌{len(errors)} archivos(s) con error, ✅{len(all_docs)} documento(s) cargados."
+            f"\n ❌ {len(errors)} archivos(s) con error, ✅ {len(all_docs)} documento(s) cargados."
         )
     else:
         print(
@@ -89,20 +94,20 @@ def load_directory(directory_path: Path) -> list[Document]:
 
     return all_docs
 
+
 def split_documents(
     docs: list[Document],
     chunk_size: int | None = None,
-    chunk_overlap: int | None = None
-) -> list[Document]
+    chunk_overlap: int | None = None,
+) -> list[Document]:
     """Divide los docomentos en chunks para indexación"""
 
     splitter = RecursiveCharacterTextSplitter(
-        chuck_size=chunk_size or settings.CHUNK_SIZE,
+        chunk_size=chunk_size or settings.CHUNK_SIZE,
         chunk_overlap=chunk_overlap or settings.CHUNK_OVERLAP,
         separators=["\n\n", "\n", ". ", ", ", ""],
-        add_start_index=True
+        add_start_index=True,
     )
-
 
     chunks = splitter.split_documents(docs)
 
@@ -113,5 +118,3 @@ def split_documents(
     )
 
     return chunks
-
-    
