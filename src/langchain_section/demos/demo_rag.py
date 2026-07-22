@@ -58,5 +58,39 @@ def index_documents() -> tuple:
     return vectorstore, vectorstore._collection.count()
 
 
+def show_used_sources(docs: list) -> None:
+    """Muestra archivos y fragmentos que usó el sistema"""
+    if not docs:
+        return
+
+    print("\n Fuentes Consultadas:")
+
+    viewed_sources = {}
+
+    for doc in docs:
+        name = doc.metadata.get("file_name", "desconocida")
+        page = doc.metadata.get("page")
+        start = doc.metadata.get("start_index")
+
+        if name not in viewed_sources:
+            viewed_sources[name] = []
+
+        info = ""
+
+        if page is not None:
+            info = f"pág. {page + 1}"
+        elif start is not None:
+            info = f"pos. {start}"
+
+        if info:
+            viewed_sources[name].append(info)
+
+        for file, locations in viewed_sources.items():
+            if locations:
+                print(f" {file} ({', '.join(locations)})")
+            else:
+                print(f" {file}")
+
+
 if __name__ == "__main__":
     index_documents()
