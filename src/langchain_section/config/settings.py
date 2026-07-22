@@ -24,7 +24,7 @@ class LangChainSettings:
     # RAG
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
-    TOP_K_RESUTS: int = 3
+    TOP_K_RESULTS: int = 3
 
     # Costos Aproximados
     COST_INPUT_PER_NILLION: float = 0.15

@@ -3,6 +3,7 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnablePassthrough
+from langchain_core.vectorstores import VectorStoreRetriever
 
 from src.langchain_section.config.settings import settings
 from src.langchain_section.core.llm import get_llm
@@ -19,7 +20,7 @@ def format_docs(docs: list[Document]) -> str:
     )
 
 
-def build_rag_chain(vectorstore: Chroma) -> tuple[Runnable, object]:
+def build_rag_chain(vectorstore: Chroma) -> tuple[Runnable, VectorStoreRetriever]:
     """Pipeline RAG con LCEL"""
 
     retriever = vectorstore.as_retriever(
