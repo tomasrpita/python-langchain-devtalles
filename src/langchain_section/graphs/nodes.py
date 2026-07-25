@@ -2,7 +2,7 @@
 
 import json
 
-from langchain.schema import HumanMessage
+from langchain.schema import AIMessage, HumanMessage
 from langchain_core.vectorstores import VectorStore
 
 from src.langchain_section.config.settings import settings
@@ -85,4 +85,56 @@ def node_retrieve(state: RAGAgenticState, vectorstore: VectorStore) -> dict:
     for src in sources:
         print(f" →> {src['file']} (pág. {src['page']})")
 
-    return {"retrived_docs": retrieved_docs, "sources": sources}
+    return {"retrieved_docs": retrieved_docs, "sources": sources}
+
+
+def node_generate(state: RAGAgenticState) -> dict:
+    """Genera la respuesta"""
+    llm = get_llm(temperature=settings.LOW_TEMPERATURE)
+
+    if state.get("retrieved_docs"):
+        docs_text = "\n\n --- \n\n".join(state["retrieved_docs"])
+        context_section = f"""INFORMACION DE LOS DOCUMENTOS EMPRESARIALES: {docs_text}
+        INSTRUCCIÓN: Basa tu respuesta principalmente en estos documentos.
+        Si la información no está aquí, dilo claramente.
+        """
+
+    else:
+        context_section = (
+            "No se encontro documentos relevantes, Responde con conocimiento general"
+        )
+
+    history_text = ""
+    if state.get("messages"):
+        previous_msgs = state["messages"][:-1]
+        recent_msgs = previous_msgs[-6:] if len(previous_msgs) > 6 else previous_msgs
+        if recent_msgs:
+            history_text = "\n".join(
+                [
+                    f"{'Usuario' if message.type == 'human' else 'Asistente'}: {message.content[:200]}"
+                    for message in recent_msgs
+                    if hasattr(message, "content") and message.content
+                ]
+            )
+
+    prompt = f"""Eres un asistente de conocimiento empresarial experto.
+{context_section}
+HISTORIAL RECIENTE:
+{history_text if history_text else "Inicio de conversación"}
+PREGUNTA: {state["question"]}
+INSTRUCCIONES:
+- Si tienes documentos, úsalos como fuente principal
+- Cita los documentos cuando sea relevante
+- Si algo no está en los documentos, dilo honestamente
+- Usa el historial solo para referencias contextuales
+- Responde en español de forma clara y profesional"""
+
+    result = llm.invoke([HumanMessage(content=prompt)])
+
+    print(f"Tipo de result {type(result)}")
+
+    used_docs = "Con documentos" if state.get("retrieved_docs") else "Sin Documentos"
+
+    print(f" [generate] {used_docs} ({len(result.content)})")
+
+    return {"response": result.content, "messages": [AIMessage(content=result.content)]}

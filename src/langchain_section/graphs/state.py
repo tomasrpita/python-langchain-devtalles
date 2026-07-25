@@ -8,7 +8,7 @@ class RAGAgenticState(TypedDict):
 
     messages: Annotated[list, add_messages]
     question: str
-    retrived_docs: list[str]
+    retrieved_docs: list[str]
     response: str
     needs_retrieval: bool
     sources: list[dict]
