@@ -138,3 +138,11 @@ INSTRUCCIONES:
     print(f" [generate] {used_docs} ({len(result.content)})")
 
     return {"response": result.content, "messages": [AIMessage(content=result.content)]}
+
+
+def decide_retrieval_path(state: RAGAgenticState) -> Literal["retrieve", "generate"]:
+    """Función de desción"""
+
+    if state.get("needs_retrieval", True):
+        return "retrieve"
+    return "generate"
