@@ -1,6 +1,7 @@
 # Los nodos son funciones
 
 import json
+from typing import Literal
 
 from langchain.schema import AIMessage, HumanMessage
 from langchain_core.vectorstores import VectorStore
