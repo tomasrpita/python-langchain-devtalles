@@ -115,3 +115,12 @@ def load_history(backend: BaseMemoryBackend, session_id: str) -> list:
     """Carga mensajes previos de una sesión"""
     history = backend.get_history(session_id)
     return history.messages
+
+
+def save_messages(
+    backend: BaseMemoryBackend, session_id: str, human_message: str, ai_message: str
+) -> None:
+    """Persiste el turno de conversación en la base de datos"""
+    history = backend.get_history(session_id)
+    history.add_user_message(human_message)
+    history.add_ai_message(ai_message)
