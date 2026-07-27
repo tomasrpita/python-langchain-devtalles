@@ -1,13 +1,16 @@
 import uuid
 from pathlib import Path
 
+from langchain.schema import HumanMessage
 from langchain_core.vectorstores import VectorStore
 
+from src.langchain_section.graphs.state import RAGAgenticState
 from src.langchain_section.core.document_loader import load_directory, split_documents
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
 from src.langchain_section.memory.base import BaseMemoryBackend
 from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
 from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
+from langchain_core.runnables import Runnable
 
 DOCUMENTS_DIR = Path("data/documents")
 COLLECTION_NAME = "knwoledge_base"
@@ -124,3 +127,97 @@ def save_messages(
     history = backend.get_history(session_id)
     history.add_user_message(human_message)
     history.add_ai_message(ai_message)
+
+
+def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> None:
+
+    history_messages = load_history(backend, session_id)
+
+    print(f"\n{'=' * 55}")
+    print("Asistente de Conocimiento Empresarial")
+    print(f"Sesión: {session_id}")
+    print(f"{'=' * 55}")
+    print("Comandos: 'sesion' | 'historial' | 'limpiar' | 'salir'")
+    print("-" * 55)
+    print()
+
+    while True:
+        try:
+            user_input = input("Tú: ").strip()
+
+            if not user_input:
+                continue
+
+            if user_input.lower() == "salir"
+                messages = backend.get_history(session_id).messages
+                print(f"\nSesión Guardada: {session_id}")
+                print(
+                    f"{len(messages)} mensajes en {'PostgreSQL' if isinstance(backend, PostgreSQLMemoryBackend) else 'SQLite'}")
+                break
+
+            if user_input.lower() == "historial":
+                messages = backend.get_history(session_id).messages
+
+                if not messages:
+                    print("[Historial vacío]")
+                    continue
+
+                print(f"\nÚltimos mensajes de la sesión: ")
+                for message in messages[-6:]:
+                    rol = "Tú" if message.type == "human" else "IA"
+                    print(f"{rol}: {message.content[:90]}")
+                print()
+                continue
+
+            if user_input.lower() == "limpiar":
+                backend.clean_history(session_id)
+                history_messages = []
+                print("Historial de esta sesión borrada. \n")
+                continue
+
+            history_messages = backend.get_history(session_id).messages
+
+            initial_state: RAGAgenticState = {
+                "messages": history_messages + [HumanMessage(content=user_input)],
+                "question": user_input,
+                "retrieved_docs": [],
+                "response": "",
+                "needs_retrieval": True,
+                "sources": []
+            }
+
+            print()
+
+            final_state: RAGAgenticState = agent.invoke(initial_state)
+
+            response = final_state["response"]
+
+            user_retrieval = bool(final_state.get("retrieved_docs"))
+
+            if user_retrieval:
+                print(f"IA [busco en documentos]: {response}")
+            else:
+                print(f"IA [respondió directo]: {response}")
+
+            sources = final_state.get("sources", [])
+
+            if sources:
+                print("\n Fuentes consultadas")
+                shown = set()
+                for source in sources:
+                    key = f"{source['file']}_p{source['page']}"
+                    if key not in shown:
+                        print(f"{source['file']} (pág. {source['page']})")
+                        shown.add(key)
+
+            print()
+
+            save_messages(backend, session_id, user_input, response)
+
+        except KeyboardInterrupt:
+            print("\nHasta luego\n")
+            print(f"ID dse sesión: {session_id}")
+            break
+
+        except Exception as e:
+            print(f"\nError: {e}\n")
