@@ -4,6 +4,7 @@ from pathlib import Path
 from langchain.schema import HumanMessage
 from langchain_core.vectorstores import VectorStore
 
+from src.langchain_section.graphs.rag_agent import build_rag_agent
 from src.langchain_section.graphs.state import RAGAgenticState
 from src.langchain_section.core.document_loader import load_directory, split_documents
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
@@ -19,28 +20,34 @@ CHROMA_PATH = "./data/chromadb_knwoledge"
 
 def setup_vectorstore() -> VectorStore | None:
     """Carga o inicializa el vector store"""
-    vectorstore = get_or_create_vectorstore(
-        collection_name=COLLECTION_NAME, persist_path=CHROMA_PATH
-    )
 
-    count = vectorstore._collection.count()
+    try:
+        vectorstore = get_or_create_vectorstore(
+            collection_name=COLLECTION_NAME, persist_path=CHROMA_PATH
+        )
 
-    if count > 0:
-        print(f" Base de conocimiento: {count} chunks indexados")
+        count = vectorstore._collection.count()
+
+        if count > 0:
+            print(f" Base de conocimiento: {count} chunks indexados")
+            return vectorstore
+
+        print("Base de conocimiento vacía. Indexando documentos...")
+        docs = load_directory(DOCUMENTS_DIR)
+
+        if not docs:
+            print(f"\n Agrega archivos .txt o .pdf en {DOCUMENTS_DIR}")
+            return None
+
+        chunks = split_documents(docs)
+        vectorstore.add_documents(chunks)
+
+        print(f"{len(chunks)} chunks indexados")
         return vectorstore
 
-    print("Base de conocimiento vacía. Indexando documentos...")
-    docs = load_directory(DOCUMENTS_DIR)
-
-    if not docs:
-        print(f"\n Agrega archivos .txt o .pdf en {DOCUMENTS_DIR}")
+    except Exception as e:
+        print(f"Error en configurando vectorstore: {e}")
         return None
-
-    chunks = split_documents(docs)
-    vectorstore.add_documents(chunks)
-
-    print(f"{len(chunks)} chunks indexados")
-    return vectorstore
 
 
 def setup_memory_backend() -> BaseMemoryBackend:
@@ -221,3 +228,20 @@ def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> No
 
         except Exception as e:
             print(f"\nError: {e}\n")
+
+def main() -> None:
+    print("=" * 50)
+    print("Asistente de conocimientos empresarial")
+    print("=" * 50)
+
+    vectorstore = setup_vectorstore()
+    if vectorstore is None:
+        return
+
+    backend = setup_memory_backend()
+
+    agent = build_rag_agent(vectorstore)
+
+    session_id = select_session(backend)
+
+    run_chat(agent, backend, session_id)
