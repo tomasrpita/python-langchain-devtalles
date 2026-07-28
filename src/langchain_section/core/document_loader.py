@@ -89,7 +89,7 @@ def load_directory(directory_path: Path) -> list[Document]:
         )
     else:
         print(
-            f"\n ✅{len(all_files)} archivo(s) cargados -> {len(all_docs)} sección/es totales"
+            f"\n ✅ {len(all_files)} archivo(s) cargados -> {len(all_docs)} sección/es totales"
         )
 
     return all_docs
