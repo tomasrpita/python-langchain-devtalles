@@ -2,16 +2,16 @@ import uuid
 from pathlib import Path
 
 from langchain.schema import HumanMessage
+from langchain_core.runnables import Runnable
 from langchain_core.vectorstores import VectorStore
 
-from src.langchain_section.graphs.rag_agent import build_rag_agent
-from src.langchain_section.graphs.state import RAGAgenticState
 from src.langchain_section.core.document_loader import load_directory, split_documents
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
+from src.langchain_section.graphs.rag_agent import build_rag_agent
+from src.langchain_section.graphs.state import RAGAgenticState
 from src.langchain_section.memory.base import BaseMemoryBackend
 from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
 from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
-from langchain_core.runnables import Runnable
 
 DOCUMENTS_DIR = Path("data/documents")
 COLLECTION_NAME = "knwoledge_base"
@@ -155,11 +155,12 @@ def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> No
             if not user_input:
                 continue
 
-            if user_input.lower() == "salir"
+            if user_input.lower() == "salir":
                 messages = backend.get_history(session_id).messages
                 print(f"\nSesión Guardada: {session_id}")
                 print(
-                    f"{len(messages)} mensajes en {'PostgreSQL' if isinstance(backend, PostgreSQLMemoryBackend) else 'SQLite'}")
+                    f"{len(messages)} mensajes en {'PostgreSQL' if isinstance(backend, PostgreSQLMemoryBackend) else 'SQLite'}"
+                )
                 break
 
             if user_input.lower() == "historial":
@@ -169,7 +170,7 @@ def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> No
                     print("[Historial vacío]")
                     continue
 
-                print(f"\nÚltimos mensajes de la sesión: ")
+                print("\nÚltimos mensajes de la sesión: ")
                 for message in messages[-6:]:
                     rol = "Tú" if message.type == "human" else "IA"
                     print(f"{rol}: {message.content[:90]}")
@@ -190,7 +191,7 @@ def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> No
                 "retrieved_docs": [],
                 "response": "",
                 "needs_retrieval": True,
-                "sources": []
+                "sources": [],
             }
 
             print()
@@ -228,6 +229,7 @@ def run_chat(agent: Runnable, backend: BaseMemoryBackend, session_id: str) -> No
 
         except Exception as e:
             print(f"\nError: {e}\n")
+
 
 def main() -> None:
     print("=" * 50)
