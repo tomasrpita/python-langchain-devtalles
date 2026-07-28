@@ -241,7 +241,12 @@ def main() -> None:
     backend = setup_memory_backend()
 
     agent = build_rag_agent(vectorstore)
+    print("\nAgente RAG agéntico listo para conversar\n")
 
     session_id = select_session(backend)
 
     run_chat(agent, backend, session_id)
+
+
+if __name__ == "__main__":
+    main()
